@@ -1,0 +1,17 @@
+camera_type: 'RGBD'   #MONO , STEREO , RGBD
+detect_method: 'DEPTH'  #DEPTH , COLOR
+
+color_fx: 320.0
+color_fy: 320.0
+color_cx: 320.0
+color_cy: 240.0
+
+depth_fx: 160.0
+depth_fy: 160.0
+depth_cx: 160.0
+depth_cy: 120.0
+
+real_circle_radius_big: 1.02
+real_circle_radius_small: 0.80
+
+resize_depth: true #default enlarge 2 times
