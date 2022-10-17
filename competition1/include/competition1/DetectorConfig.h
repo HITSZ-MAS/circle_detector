@@ -34,6 +34,7 @@ public:
         nh.getParam("/depthtest_node/detect_method",detect_method_);
 
         nh.getParam("/depthtest_node/resize_depth",resize_depth_);
+        nh.getParam("/depthtest_node/show_image",show_image_);
 
         std::cout<<color_fx_<<std::endl;
         std::cout<<a<<std::endl;
@@ -80,6 +81,15 @@ public:
     std::string detect_method_;
     
     bool resize_depth_;  //default enlarge 2 times
+
+    bool show_image_;
+
+    double color_width_;
+    double color_height_;
+    double depth_width_;
+    double depth_height_;
+
+    int desired_color_; //use unordered map can solve this problem. such as 0->red, 1-> yellow(std::vector<int>) HSV
 
 
 };

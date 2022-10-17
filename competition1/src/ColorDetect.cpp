@@ -679,7 +679,10 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
         goodRect = true;
     }
 
-    //cv::imshow("m",m);
+    if(config_->show_image_)
+    {
+        cv::imshow("m",m);
+    }
     return goodRect;
     
 }

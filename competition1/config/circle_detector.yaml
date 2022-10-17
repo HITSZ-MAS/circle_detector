@@ -15,3 +15,5 @@ real_circle_radius_big: 1.02
 real_circle_radius_small: 0.80
 
 resize_depth: true #default enlarge 2 times
+
+show_image: true

@@ -121,7 +121,7 @@ void CircleDetector::ImageOdomCallback(const sensor_msgs::Image::ConstPtr &msgs,
     int circlenum = Circles_Pose.size();
     if(circlenum<=0)
     {
-        cv::waitKey(50);
+        cv::waitKey(10);
         return;
     }
 
