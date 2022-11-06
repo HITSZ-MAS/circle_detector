@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<launch>
 
-  <node pkg="competition1" type="depthtest" name="depthtest_node">
+<launch>
+  <node pkg="competition1" type="depthtest" name="depthtest_node" output="screen">
     <rosparam file="$(find competition1)/config/circle_detector.yaml" command="load" />
   </node>
 

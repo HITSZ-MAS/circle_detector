@@ -14,6 +14,12 @@ depth_cy: 120.0
 real_circle_radius_big: 1.02
 real_circle_radius_small: 0.80
 
+color_width: 640
+color_height: 480
+
+depth_width: 320
+depth_height: 240
+
 resize_depth: true #default enlarge 2 times
 
 show_image: true

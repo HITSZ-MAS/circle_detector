@@ -33,7 +33,13 @@ public:
         nh.getParam("/depthtest_node/camera_type",camera_type_);
         nh.getParam("/depthtest_node/detect_method",detect_method_);
 
+        nh.getParam("/depthtest_node/color_width",color_width_);
+        nh.getParam("/depthtest_node/color_height",color_height_);
+        nh.getParam("/depthtest_node/depth_width",depth_width_);
+        nh.getParam("/depthtest_node/depth_height",depth_height_);
+
         nh.getParam("/depthtest_node/resize_depth",resize_depth_);
+
         nh.getParam("/depthtest_node/show_image",show_image_);
 
         std::cout<<color_fx_<<std::endl;
@@ -56,6 +62,11 @@ public:
     double color_fy_;
     double color_cx_;
     double color_cy_;
+
+    double color_width_;
+    double color_height_;
+    double depth_width_;
+    double depth_height_;
 
     // enum CameraType
     // {
@@ -83,13 +94,6 @@ public:
     bool resize_depth_;  //default enlarge 2 times
 
     bool show_image_;
-
-    double color_width_;
-    double color_height_;
-    double depth_width_;
-    double depth_height_;
-
-    int desired_color_; //use unordered map can solve this problem. such as 0->red, 1-> yellow(std::vector<int>) HSV
 
 
 };

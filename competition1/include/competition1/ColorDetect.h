@@ -47,6 +47,7 @@ class ColorDetector
         void CirclePose(std::vector<cv::Rect> &rects);
         bool isInSquare(double centerx,double centery);
         bool FindContoursDepth(cv::Mat inputImg,std::vector<cv::Rect> &boundRect,cv::Mat depth);
+        bool IsOutOfRange(int width , int height , int row,int col); //y <height ; x < width
         
         std::vector<double> FitCircle(std::vector<std::vector<double>> pts);
 
@@ -62,6 +63,11 @@ class ColorDetector
         double depth_cy_;
         cv::Mat K;
         double realRadius;
+
+        double color_width_;
+        double color_height_;
+        double depth_width_;
+        double depth_height_;
 
     public:
     //for color detection

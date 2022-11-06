@@ -24,14 +24,11 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 )
 
-find_package(Ceres REQUIRED)
-
 find_package(Eigen3 REQUIRED)
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
-  ${CERES_INCLUDE_DIRS}
 )
 
 #OpenCV
@@ -45,16 +42,15 @@ include_directories( "/usr/include/eigen3" )
 find_package(Sophus REQUIRED)
 include_directories(${Sophus_INCLUDE_DIRS})
 
-add_library(mylibs
+add_library(myliibs
   src/ColorDetect.cpp
 )
 
 set(LIBS
-mylibs
+myliibs
 ${catkin_LIBRARIES}
 ${OpenCV_LIBS}
 ${Sophus_LIBRARIES}
-${CERES_LIBRARIES}
 )
 
 add_executable(colortest src/colortest.cpp)

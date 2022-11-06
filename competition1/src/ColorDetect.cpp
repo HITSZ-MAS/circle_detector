@@ -34,6 +34,12 @@ void ColorDetector::Initialize()
     fy=config_->color_fy_;
     cx=config_->color_cx_;
     cy=config_->color_cy_;
+
+    color_height_ = config_->color_height_;
+    color_width_ = config_->color_width_;
+    depth_height_=config_->depth_height_;
+    depth_width_ = config_->depth_width_;
+
     realRadius = config_->real_circle_radius_big_;
     circle_num_ = 0;
     PoseX_ = 0.0;
@@ -57,7 +63,9 @@ void ColorDetector::Initialize()
         depth_cy_ = config_->depth_cy_;
     }
 
-    std::cout<<fx<<std::endl;
+
+
+    std::cout<<color_height_<<std::endl;
     std::cout<<"Initialize successfully!!!!!!!!!!!!!!!!!"<<std::endl;
 }
 
@@ -610,11 +618,12 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
         double area_r = sqrt(area/3.1416);
 
         if(abs(arc_r-area_r)>17)
+        //if(0.9>(arc_r/area_r)||(arc_r/area_r)>1.1)
         {
             //no circle
             continue;
         }
-        cv::drawContours(m,contours,i,cv::Scalar(128,0,255));
+        cv::drawContours(m,contours,i,cv::Scalar(128,0,255),3);
 
         std::vector<double> circle;
         double depthsum = 0.0;
@@ -632,7 +641,15 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
                 //{
                     for(int k=0;k<4;k++)
                     {
-                        zz = depth.at<float>(p.y/2+direct[k][0],p.x/2+direct[k][1]);
+                        int row=p.y/2+direct[k][0];
+                        int col=p.x/2+direct[k][1];
+                        if(IsOutOfRange(depth_width_,depth_height_,row,col))
+                        {
+                            //Out of Range 
+                            continue;
+                        }
+
+                        zz = depth.at<float>(row,col);
                         if(abs(zz)>0.0001)
                         {
                             break;
@@ -654,26 +671,31 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
 
         }
 
-        if(Circles_Points_Camera_.size()>8)
+        if(Circles_Points_Camera_.size()>100)
         {
             circle = FitCircle(Circles_Points_Camera_);
             Fitted_Circles_.push_back(circle);
-            
-            std::vector<double> c(3);
-            c[0]=circle[0];
-            c[1]=circle[1];
-            c[2]=circle[2];
-            Circles_Pose_.push_back(c);
+
+            if(circle[6]>0.9&&circle[6]<1.1)
+            {
+                std::vector<double> c(3);
+                c[0]=circle[0];
+                c[1]=circle[1];
+                c[2]=circle[2];
+                Circles_Pose_.push_back(c);
+            }
+        }
+        else
+        {
+            ROS_WARN("pts in camera frame isn't enough for detecting!!!");
         }
 
-
-        std::cout<<count<<std::endl;
         Z_From_Depth_ = depthsum/count/2.0;
 
 
         cv::Rect boundRectsingle = cv::boundingRect(cv::Mat(contours[i]));
         rectangle(m, cv::Point(boundRectsingle.x, boundRectsingle.y), 
-                            cv::Point(boundRectsingle.x + boundRectsingle.width, boundRectsingle.y + boundRectsingle.height), cv::Scalar(255), 1, 8);
+                            cv::Point(boundRectsingle.x + boundRectsingle.width, boundRectsingle.y + boundRectsingle.height), cv::Scalar(255), 3, 8);
         
         boundRect.push_back(boundRectsingle);
         goodRect = true;
@@ -700,6 +722,7 @@ std::vector<double> ColorDetector::FitCircle(std::vector<std::vector<double>> pt
     std::vector<double> circle;
 
     int num = pts.size();
+
     int dim = 3;
 
     Eigen::MatrixXd M(num, dim);
@@ -763,8 +786,25 @@ std::vector<double> ColorDetector::FitCircle(std::vector<std::vector<double>> pt
     circle.push_back(A(1));
     circle.push_back(A(2));
     circle.push_back(radius);
-    std::cout<<"sb"<<std::endl;
+    std::cout<<"fit circle successfully"<<std::endl;
+    ROS_WARN("r = %f" , radius);
     return circle;
+}
+
+bool ColorDetector::IsOutOfRange(int width , int height , int row ,int col)
+{
+    // if(row<0||col<0)
+    // {
+    //     return true;
+    // }
+
+    // if(row>=height||col>=width)
+    // {
+    //     return true;
+    // }
+
+    // return false;
+    return (row<0||col<0)||(row>=height||col>=width);
 }
 
 
