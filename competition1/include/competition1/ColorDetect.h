@@ -14,6 +14,7 @@
 #include <ros/ros.h>
 
 #include "competition1/DetectorConfig.h"
+#include "competition1/RansacIter.h"
 
 class ColorDetector
 {
@@ -96,6 +97,8 @@ class ColorDetector
     //for params
         DetectorConfig *config_;
         bool is_resize_depth_;
+
+        RansacFitCircle Rfc_;
         
 };
 

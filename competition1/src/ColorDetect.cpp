@@ -63,7 +63,7 @@ void ColorDetector::Initialize()
         depth_cy_ = config_->depth_cy_;
     }
 
-
+    Rfc_.SetParams(200,0.95,0.07);
 
     std::cout<<color_height_<<std::endl;
     std::cout<<"Initialize successfully!!!!!!!!!!!!!!!!!"<<std::endl;
@@ -608,7 +608,7 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
         double arc_length=cv::arcLength(contours[i],true);
         double area = cv::contourArea(contours[i]);
 
-        if(area<2000)
+        if(area<200)
         {
             //so small
             continue;
@@ -671,10 +671,15 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
 
         }
 
+        bool isCircle = false;
+
         if(Circles_Points_Camera_.size()>100)
         {
-            circle = FitCircle(Circles_Points_Camera_);
+            //circle = FitCircle(Circles_Points_Camera_);
+            isCircle = Rfc_.SolveRANSACFitCircle(Circles_Points_Camera_,circle);
             Fitted_Circles_.push_back(circle);
+
+            ROS_INFO("fit circle successfully!!!!!");
 
             if(circle[6]>0.9&&circle[6]<1.1)
             {
@@ -692,12 +697,14 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
 
         Z_From_Depth_ = depthsum/count/2.0;
 
-
-        cv::Rect boundRectsingle = cv::boundingRect(cv::Mat(contours[i]));
-        rectangle(m, cv::Point(boundRectsingle.x, boundRectsingle.y), 
-                            cv::Point(boundRectsingle.x + boundRectsingle.width, boundRectsingle.y + boundRectsingle.height), cv::Scalar(255), 3, 8);
+        if(isCircle)
+        {
+            cv::Rect boundRectsingle = cv::boundingRect(cv::Mat(contours[i]));
+            rectangle(m, cv::Point(boundRectsingle.x, boundRectsingle.y), 
+            cv::Point(boundRectsingle.x + boundRectsingle.width, boundRectsingle.y + boundRectsingle.height), cv::Scalar(255), 3, 8);
+            boundRect.push_back(boundRectsingle);
+        }
         
-        boundRect.push_back(boundRectsingle);
         goodRect = true;
     }
 
@@ -786,7 +793,7 @@ std::vector<double> ColorDetector::FitCircle(std::vector<std::vector<double>> pt
     circle.push_back(A(1));
     circle.push_back(A(2));
     circle.push_back(radius);
-    std::cout<<"fit circle successfully"<<std::endl;
+    //std::cout<<"fit circle successfully"<<std::endl;
     ROS_WARN("r = %f" , radius);
     return circle;
 }
