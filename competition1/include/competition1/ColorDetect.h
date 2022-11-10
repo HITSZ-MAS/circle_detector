@@ -73,6 +73,8 @@ class ColorDetector
     public:
     //for color detection
         int circle_num_;
+        int min_contours_area_;
+        int min_points_in_camera_;
 
     public:
     //for circle pose

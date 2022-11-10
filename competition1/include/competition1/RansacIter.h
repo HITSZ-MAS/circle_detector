@@ -42,6 +42,7 @@ public:
     int iter_time_;
     double least_probability_;
     double least_error_;
+    double least_circle_ratio_;
     std::vector<double> model_;
 
     //random
@@ -53,7 +54,7 @@ public:
     double CalcResidual(const std::vector<double> circle,const std::vector<double> point);
 
     bool SolveRANSACFitCircle(const std::vector<std::vector<double>> pts , std::vector<double> &circle);
-    void SetParams(int iter_time , double least_probability , double least_error);
+    void SetParams(int iter_time , double least_probability , double least_error,double least_circle);
 
 public:
     int pre_inliers_;

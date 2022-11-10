@@ -5,6 +5,7 @@ RansacFitCircle::RansacFitCircle()
     iter_time_ = 200;
     least_error_ = 0.07; //meter
     least_probability_ = 0.99;
+    least_circle_ratio_ = 0.90;
 }
 
 RansacFitCircle::~RansacFitCircle()
@@ -12,11 +13,12 @@ RansacFitCircle::~RansacFitCircle()
     ;
 }
 
-void RansacFitCircle::SetParams(int iter_time , double least_probability , double least_error)
+void RansacFitCircle::SetParams(int iter_time , double least_probability , double least_error,double least_circle)
 {
     iter_time_=iter_time;
     least_error_=least_error;
     least_probability_=least_probability;
+    least_circle_ratio_=least_circle;
 }
 
 
@@ -70,7 +72,7 @@ bool RansacFitCircle::SolveRANSACFitCircle(const std::vector<std::vector<double>
         }
     }
     double ratio = double(pre_inliers_)/double(pts_num);
-    if(ratio<0.90)
+    if(ratio<least_circle_ratio_)
     {
         ROS_WARN("this circle is not good!!!");
         circle = model_;

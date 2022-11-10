@@ -47,6 +47,9 @@ void ColorDetector::Initialize()
     PoseZ_ = 0.0;
     PoseYaw_ = 0.0;
 
+    min_contours_area_ = config_->min_contours_area_;
+    min_points_in_camera_ = config_->min_points_in_camera_;
+
     is_resize_depth_ = config_->resize_depth_;
     if(is_resize_depth_)
     {
@@ -63,9 +66,11 @@ void ColorDetector::Initialize()
         depth_cy_ = config_->depth_cy_;
     }
 
-    Rfc_.SetParams(200,0.95,0.07);
 
-    std::cout<<color_height_<<std::endl;
+    Rfc_.SetParams(config_->RANSAC_iter_time_,0.99,config_->RANSAC_least_error_,
+                                                    config_->RANSAC_least_circle_ratio_);
+
+    std::cout<<config_->RANSAC_iter_time_<<std::endl;
     std::cout<<"Initialize successfully!!!!!!!!!!!!!!!!!"<<std::endl;
 }
 
@@ -608,7 +613,7 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
         double arc_length=cv::arcLength(contours[i],true);
         double area = cv::contourArea(contours[i]);
 
-        if(area<200)
+        if(area<min_contours_area_)
         {
             //so small
             continue;
@@ -673,10 +678,17 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
 
         bool isCircle = false;
 
-        if(Circles_Points_Camera_.size()>100)
+        if(Circles_Points_Camera_.size()>min_points_in_camera_)
         {
-            //circle = FitCircle(Circles_Points_Camera_);
-            isCircle = Rfc_.SolveRANSACFitCircle(Circles_Points_Camera_,circle);
+            if(config_->use_RANSAC_)
+            {
+                isCircle = Rfc_.SolveRANSACFitCircle(Circles_Points_Camera_,circle);
+            }
+            else
+            {
+                circle = FitCircle(Circles_Points_Camera_);
+            }
+            
             Fitted_Circles_.push_back(circle);
 
             ROS_INFO("fit circle successfully!!!!!");
@@ -697,7 +709,7 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
 
         Z_From_Depth_ = depthsum/count/2.0;
 
-        if(isCircle)
+        if(isCircle||!config_->use_RANSAC_)
         {
             cv::Rect boundRectsingle = cv::boundingRect(cv::Mat(contours[i]));
             rectangle(m, cv::Point(boundRectsingle.x, boundRectsingle.y), 

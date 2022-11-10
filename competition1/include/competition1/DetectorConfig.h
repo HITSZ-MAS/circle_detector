@@ -39,11 +39,22 @@ public:
         nh.getParam("/depthtest_node/depth_height",depth_height_);
 
         nh.getParam("/depthtest_node/resize_depth",resize_depth_);
-
         nh.getParam("/depthtest_node/show_image",show_image_);
 
-        std::cout<<color_fx_<<std::endl;
-        std::cout<<a<<std::endl;
+        //for RANSAC
+        nh.getParam("/depthtest_node/use_RANSAC",use_RANSAC_);
+        nh.getParam("/depthtest_node/iter_time",RANSAC_iter_time_);
+        nh.getParam("/depthtest_node/least_error",RANSAC_least_error_);
+        nh.getParam("/depthtest_node/least_circle_ratio",RANSAC_least_circle_ratio_);
+
+        //for detecting circle
+        nh.getParam("/depthtest_node/min_contours_area",min_contours_area_);
+        nh.getParam("/depthtest_node/min_points_in_camera",min_points_in_camera_);
+
+        //for ROS topic
+        
+
+        ROS_INFO("config loaded !!!!!!!!!!!!!!");
     }
 
     DetectorConfig()
@@ -92,9 +103,18 @@ public:
     std::string detect_method_;
     
     bool resize_depth_;  //default enlarge 2 times
-
     bool show_image_;
 
+
+    //RANSAC
+    bool use_RANSAC_;
+    int RANSAC_iter_time_;
+    double RANSAC_least_error_;
+    double RANSAC_least_circle_ratio_;
+
+    //detecting circle
+    int min_contours_area_;
+    int min_points_in_camera_;
 
 };
 

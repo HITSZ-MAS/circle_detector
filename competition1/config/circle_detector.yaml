@@ -1,3 +1,9 @@
+#these params havent used now!!
+color_image_topic: ""
+depth_image_topic: ""
+odom_topic: ""
+circle_pose_topic: ""
+
 camera_type: 'RGBD'   #MONO , STEREO , RGBD
 detect_method: 'DEPTH'  #DEPTH , COLOR
 
@@ -21,5 +27,14 @@ depth_width: 320
 depth_height: 240
 
 resize_depth: true #default enlarge 2 times
-
 show_image: true
+
+#RANSAC
+use_RANSAC: true
+iter_time: 200
+least_error: 0.07
+least_circle_ratio: 0.9
+
+#for detecting circle
+min_contours_area: 2000
+min_points_in_camera: 100 #if point num < 100 , then consider this points is not enough to fit circle
