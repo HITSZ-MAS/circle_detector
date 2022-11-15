@@ -2,6 +2,7 @@
 #define COLORDETECT_H
 
 #include <opencv2/core/core.hpp>
+#include <opencv2/opencv.hpp>
 #include <opencv2/imgcodecs/imgcodecs.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -29,11 +30,12 @@ class ColorDetector
         //int COLOR[1][6] = {0,10,43,255,46,255};  //can detect the third OK
         //int COLOR[1][6] = {17,25,43,255,46,255}; // can detect road
         //int COLOR[1][6] = {17,19,43,255,46,255}; // can detect 5 5  with road
-        int COLOR[1][6] = {0,16,43,255,46,255}; // no
+        int COLOR[2][6] = {{0,16,43,255,46,255},{100,104,183,255,161,255}}; // no
         enum COLORTYPE
         {
             NONE=-1,
-            RED=0
+            RED=0,
+            BLUE=1
         };
 
 
@@ -49,6 +51,7 @@ class ColorDetector
         bool isInSquare(double centerx,double centery);
         bool FindContoursDepth(cv::Mat inputImg,std::vector<cv::Rect> &boundRect,cv::Mat depth);
         bool IsOutOfRange(int width , int height , int row,int col); //y <height ; x < width
+        void Color2Depth(int u_color , int v_color , int &u_depth, int &v_depth);
         
         std::vector<double> FitCircle(std::vector<std::vector<double>> pts);
 
@@ -73,7 +76,7 @@ class ColorDetector
     public:
     //for color detection
         int circle_num_;
-        int min_contours_area_;
+        double min_contours_area_;
         int min_points_in_camera_;
 
     public:
@@ -101,6 +104,9 @@ class ColorDetector
         bool is_resize_depth_;
 
         RansacFitCircle Rfc_;
+
+        int pixel_move_;
+        int pixel_move_max_;
         
 };
 

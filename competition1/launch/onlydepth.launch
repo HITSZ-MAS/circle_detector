@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<launch>
+  <node pkg="competition1" type="onlydetector" name="onlydetector_node" output="screen">
+    <rosparam file="$(find competition1)/config/D435i_aligned.yaml" command="load" />
+  </node>
+
+</launch>

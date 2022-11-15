@@ -74,7 +74,7 @@ bool RansacFitCircle::SolveRANSACFitCircle(const std::vector<std::vector<double>
     double ratio = double(pre_inliers_)/double(pts_num);
     if(ratio<least_circle_ratio_)
     {
-        ROS_WARN("this circle is not good!!!");
+        ROS_WARN("this circle is not good!!! Ratio:%f , %f",ratio,least_circle_ratio_);
         circle = model_;
         return false;
     }

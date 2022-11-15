@@ -54,8 +54,14 @@ ${OpenCV_LIBS}
 ${Sophus_LIBRARIES}
 )
 
-add_executable(colortest src/colortest.cpp)
-target_link_libraries(colortest ${LIBS})
+# add_executable(colortest src/colortest.cpp)
+# target_link_libraries(colortest ${LIBS})
 
-add_executable(depthtest src/depthtest.cpp)
-target_link_libraries(depthtest ${LIBS})
+add_executable(CircleDetector src/CircleDetector.cpp)
+target_link_libraries(CircleDetector ${LIBS})
+
+add_executable(onlydetector src/OnlyDetector.cpp)
+target_link_libraries(onlydetector ${LIBS})
+
+add_executable(colormethod src/ColorMethod.cpp)
+target_link_libraries(colormethod ${LIBS})

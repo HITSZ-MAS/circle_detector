@@ -70,6 +70,9 @@ void ColorDetector::Initialize()
     Rfc_.SetParams(config_->RANSAC_iter_time_,0.99,config_->RANSAC_least_error_,
                                                     config_->RANSAC_least_circle_ratio_);
 
+    pixel_move_ = config_->pixel_move_;
+    pixel_move_max_=config_->pixel_move_max_;
+
     std::cout<<config_->RANSAC_iter_time_<<std::endl;
     std::cout<<"Initialize successfully!!!!!!!!!!!!!!!!!"<<std::endl;
 }
@@ -108,19 +111,29 @@ bool ColorDetector::Detect(cv::Mat inputImg , int colortype , cv::Mat &outputImg
     else
     {
         cv::Mat HSVimg,temp,temp2;
-        inputImg = inputImg(cv::Range(1,400),cv::Range(50,590));
         cv::GaussianBlur(inputImg, inputImg, cv::Size(3, 3),1, 1);
         cv::cvtColor(inputImg, HSVimg, CV_BGR2HSV);
-        cv::inRange(HSVimg, cv::Scalar(COLOR[colortype][0], COLOR[colortype][2], COLOR[colortype][4]), 
-                                                    cv::Scalar(COLOR[colortype][1], COLOR[colortype][3], COLOR[colortype][5]),temp); //Threshold the image
-        //cv::inRange(HSVimg, cv::Scalar(0, COLOR[colortype][2], COLOR[colortype][4]), 
-        //                                            cv::Scalar(10, COLOR[colortype][3], COLOR[colortype][5]),temp2); //Threshold the image
-        //temp = temp+temp2;
+        //std::cout<<colortype<<std::endl;
+        // cv::inRange(HSVimg, cv::Scalar(COLOR[colortype][0], COLOR[colortype][2], COLOR[colortype][4]), 
+        //                                             cv::Scalar(COLOR[colortype][1], COLOR[colortype][3], COLOR[colortype][5]),temp); //Threshold the image
+        // cv::inRange(HSVimg, cv::Scalar(99,116,137), 
+        //                                     cv::Scalar(112,255,255),temp); //Threshold the image
+        // cv::inRange(HSVimg, cv::Scalar(0,43,46), 
+        //                                     cv::Scalar(10,255,255),temp); //Threshold the image
+        // cv::inRange(HSVimg, cv::Scalar(156,43,46), 
+        //                                     cv::Scalar(180,255,255),temp2); //Threshold the image
+       // temp = temp+temp2;
+        cv::inRange(HSVimg, cv::Scalar(172,145,139), 
+                                            cv::Scalar(179,255,255),temp); //Threshold the image
         cv::Mat output;
-        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(3,3));
+        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(1,1));
         cv::morphologyEx(temp,output,cv::MORPH_OPEN,kernel);
         outputImg = output.clone();
-        // cv::imshow("color" , outputImg);
+        //outputImg=temp.clone();
+        if(config_->show_image_)
+        {
+            cv::imshow("color" , outputImg);
+        }
         return true;
     }
 }
@@ -289,9 +302,9 @@ bool ColorDetector::HoughFindCircle(cv::Mat& input , std::vector<cv::Vec3f> &cir
     //to gray
     cv::Mat gray;
     //input = input(cv::Range(100,350),cv::Range(80,460));
-    //cv::cvtColor(input, gray, cv::COLOR_BGR2GRAY);
-    cv::GaussianBlur(input, input, cv::Size(5, 5),2, 2);
-    // cv::imshow("gray",gray);
+    //cv::cvtColor(input, input, cv::COLOR_BGR2GRAY);
+    //cv::GaussianBlur(input, input, cv::Size(5, 5),1, 1);
+    cv::imshow("gray",input);
 	HoughCircles(input, circles, cv::HOUGH_GRADIENT,1.8,300,200,100,10,300);
 
     if(circles.size()<=0)
@@ -302,7 +315,6 @@ bool ColorDetector::HoughFindCircle(cv::Mat& input , std::vector<cv::Vec3f> &cir
 	//依次在途中绘制出圆
     cv::Mat drawimage = input.clone();
     cv::cvtColor(input,drawimage,cv::COLOR_GRAY2RGB);
-    std::cout<<circles.size()<<std::endl;
 	for (size_t i = 0; i < circles.size(); i++)
 	{
 		//参数定义
@@ -313,8 +325,12 @@ bool ColorDetector::HoughFindCircle(cv::Mat& input , std::vector<cv::Vec3f> &cir
 		//绘制圆轮廓
 		circle(drawimage, center, radius, cv::Scalar(155, 20, 255), 3, 8, 0);
 	}
-    //cv::namedWindow("标注出circle", cv::WINDOW_NORMAL);
-    //cv::imshow("标注出circle",drawimage );
+    
+    if(config_->show_image_)
+    {
+        cv::namedWindow("标注出circle", cv::WINDOW_NORMAL);
+        cv::imshow("标注出circle",drawimage );
+    }
 
     return true;
 }
@@ -566,7 +582,7 @@ std::vector<double> ColorDetector::Pixel2Camera(double x,double y,double depth)
     // PoseX_ = poseZc+0.26;
     // PoseY_ = -poseXc;
     // PoseZ_ = -poseYc;
-    pc[0]=poseZc +0.26;
+    pc[0]=poseZc;
     pc[1]=-poseXc;
     pc[2]=-poseYc;
 
@@ -597,11 +613,11 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
 
     std::vector<double> g_dConArea(contours.size());
 
-    //
     int contoursNum = contours.size();
     if(contoursNum<=0)
     {
         //no contours
+        //ROS_WARN("no contours!!!");
         return false;
     }
 
@@ -610,26 +626,30 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
     cv::cvtColor(m,m,cv::COLOR_GRAY2RGB);
     for(int i=0; i < contoursNum ; ++i)
     {
+
         double arc_length=cv::arcLength(contours[i],true);
         double area = cv::contourArea(contours[i]);
 
         if(area<min_contours_area_)
         {
-            //so small
+            //ROS_WARN("contour is so small!!  area: %f , min_area:%f" , area,min_contours_area_);
             continue;
         }
 
         double arc_r = arc_length/2.0/3.1416;
         double area_r = sqrt(area/3.1416);
 
-        if(abs(arc_r-area_r)>17)
+        if(abs(arc_r-area_r)>35)
         //if(0.9>(arc_r/area_r)||(arc_r/area_r)>1.1)
         {
             //no circle
             continue;
         }
-        cv::drawContours(m,contours,i,cv::Scalar(128,0,255),3);
+        cv::Rect boundRectsingle = cv::boundingRect(cv::Mat(contours[i]));
+        double center_x_2D = boundRectsingle.x+boundRectsingle.width/2;
+        double center_y_2D = boundRectsingle.y+boundRectsingle.height/2;
 
+        cv::drawContours(m,contours,i,cv::Scalar(128,0,255),3);
         std::vector<double> circle;
         double depthsum = 0.0;
         int count=0;
@@ -638,16 +658,56 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
 
         for(int j  = 0; j<contours[i].size();++j)
         {
+            
             cv::Point p = contours[i][j];
-            double zz = depth.at<float>(p.y/2,p.x/2);
+
+            if(p.x-center_x_2D>20)
+            {
+                p.x=p.x-8;
+            }
+
+            if(p.x-center_x_2D<-20)
+            {
+                p.x=p.x+8;
+            }
+            if(p.y-center_y_2D>20)
+            {
+                p.y=p.y-8;
+            }
+
+            if(p.y-center_y_2D<-20)
+            {
+                p.y=p.y+8;
+            }
+
+            cv::circle(m, p, 3, cv::Scalar(0, 255, 120), -1);//画点，其实就是实心圆
+
+            // double x_ratio,y_ratio;// x: depth_width/color_width ; y: depth_height/color_height
+            // x_ratio = double(depth_width_)/double(color_width_);
+            // y_ratio = double(depth_height_)/double(color_height_);
+
+            // int x,y;
+            // x = cvRound(double(p.x)*x_ratio);
+            // y= cvRound(double(p.y)*y_ratio);
+
+            if(IsOutOfRange(depth_width_,depth_height_,p.y,p.x))
+            {
+                continue;
+            }
+
+            double zz = depth.at<float>(p.y,p.x);
+            if(abs(zz)>4.0)
+            {
+                continue;
+            }
             if(abs(zz)<0.00001)
             {
                 //if(IsInRange(p.x/2,p.y/2))
                 //{
                     for(int k=0;k<4;k++)
                     {
-                        int row=p.y/2+direct[k][0];
-                        int col=p.x/2+direct[k][1];
+                        int row=p.y+direct[k][0];
+                        int col=p.x+direct[k][1];
                         if(IsOutOfRange(depth_width_,depth_height_,row,col))
                         {
                             //Out of Range 
@@ -676,10 +736,78 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
 
         }
 
+
+        // for(int j  = 1; j<boundRectsingle.width-1;++j)
+        // {
+        //     for(int k=1;k<boundRectsingle.height-1;++k)
+        //     {
+        //         int row, col;
+        //         row=boundRectsingle.y+k;
+        //         col=boundRectsingle.x+j;
+        //         if(IsOutOfRange(depth_width_,depth_height_,row,col))
+        //         {
+        //             continue;
+        //         }
+        //        if(inputImg.at<uchar>(row,col)<5)
+        //        {
+        //             continue;
+        //        }
+
+        //         if(IsOutOfRange(depth_width_,depth_height_,row,col))
+        //         {
+        //             continue;
+        //         }
+
+        //         double zz = depth.at<float>(row,col);
+        //         if(abs(zz)>3.0)
+        //         {
+        //             continue;
+        //         }
+        //         if(abs(zz)<0.2)
+        //         {
+        //             continue;
+        //         }
+        //         if(abs(zz)<0.00001)
+        //         {
+        //             //if(IsInRange(p.x/2,p.y/2))
+        //             //{
+        //                 for(int k=0;k<4;k++)
+        //                 {
+        //                     int row_new=row+direct[k][0];
+        //                     int col_new=col+direct[k][1];
+        //                     if(IsOutOfRange(depth_width_,depth_height_,row_new,col_new))
+        //                     {
+        //                         //Out of Range 
+        //                         continue;
+        //                     }
+
+        //                     zz = depth.at<float>(row_new,col_new);
+        //                     if(abs(zz)>0.0001)
+        //                     {
+        //                         break;
+        //                     }
+        //                 }
+        //         // }
+        //         }
+        //         if(abs(zz)<0.0001)
+        //         {
+        //             continue;
+        //         }
+        //         count++;
+        //         depthsum+=zz;
+
+        //         //For fit Circle
+        //         std::vector<double> pc;
+        //         pc=Pixel2Camera(row,col,zz);
+        //         Circles_Points_Camera_.push_back(pc);
+        //     }
+        // }
+
         bool isCircle = false;
 
         if(Circles_Points_Camera_.size()>min_points_in_camera_)
         {
+            std::cout<<"points num:"<<Circles_Points_Camera_.size()<<std::endl;
             if(config_->use_RANSAC_)
             {
                 isCircle = Rfc_.SolveRANSACFitCircle(Circles_Points_Camera_,circle);
@@ -693,8 +821,9 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
 
             ROS_INFO("fit circle successfully!!!!!");
 
-            if(circle[6]>0.9&&circle[6]<1.1)
+            if(/*circle[6]>0.9&&circle[6]<1.1*/1)
             {
+                std::cout<<"R="<<circle[6]<<std::endl;
                 std::vector<double> c(3);
                 c[0]=circle[0];
                 c[1]=circle[1];
@@ -704,14 +833,14 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
         }
         else
         {
-            ROS_WARN("pts in camera frame isn't enough for detecting!!!");
+            ROS_WARN("pts in camera frame isn't enough for detecting!!! PointsNum:%d, MinNum: %d" 
+                                    , Circles_Points_Camera_.size(),min_points_in_camera_);
         }
 
         Z_From_Depth_ = depthsum/count/2.0;
 
         if(isCircle||!config_->use_RANSAC_)
         {
-            cv::Rect boundRectsingle = cv::boundingRect(cv::Mat(contours[i]));
             rectangle(m, cv::Point(boundRectsingle.x, boundRectsingle.y), 
             cv::Point(boundRectsingle.x + boundRectsingle.width, boundRectsingle.y + boundRectsingle.height), cv::Scalar(255), 3, 8);
             boundRect.push_back(boundRectsingle);
@@ -805,7 +934,6 @@ std::vector<double> ColorDetector::FitCircle(std::vector<std::vector<double>> pt
     circle.push_back(A(1));
     circle.push_back(A(2));
     circle.push_back(radius);
-    //std::cout<<"fit circle successfully"<<std::endl;
     ROS_WARN("r = %f" , radius);
     return circle;
 }
@@ -824,6 +952,12 @@ bool ColorDetector::IsOutOfRange(int width , int height , int row ,int col)
 
     // return false;
     return (row<0||col<0)||(row>=height||col>=width);
+}
+
+void ColorDetector::Color2Depth(int u_color , int v_color , int &u_depth, int &v_depth)
+{
+    Eigen::Vector3d Pd;
+
 }
 
 

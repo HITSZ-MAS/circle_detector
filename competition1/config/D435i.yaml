@@ -1,0 +1,59 @@
+#these params havent used now!!
+color_image_topic: ""
+depth_image_topic: ""
+odom_topic: ""
+circle_pose_topic: ""
+
+camera_type: 'RGBD'   #MONO , STEREO , RGBD
+detect_method: 'DEPTH'  #DEPTH , COLOR
+
+color_fx: 908.58
+color_fy: 909.12
+color_cx: 649.92
+color_cy: 370.52
+
+#D435i depth
+# depth_fx: 420.41
+# depth_fy: 420.41
+# depth_cx: 421.49
+# depth_cy: 238.69
+
+#D455i depth
+# depth_fx: 380.74
+# depth_fy: 380.75
+# depth_cx: 317.73
+# depth_cy: 238.69
+
+#D435i aligned depth
+depth_fx: 605.72
+depth_fy: 606.08
+depth_cx: 326.62
+depth_cy: 247.01
+
+real_circle_radius_big: 1.02
+real_circle_radius_small: 0.80
+
+color_width: 1280
+color_height: 720
+
+# depth_width: 848
+# depth_height: 480
+
+depth_width: 848
+depth_height: 480
+
+resize_depth: false #default enlarge 2 times
+show_image: true
+
+#RANSAC
+use_RANSAC: true
+iter_time: 350
+least_error: 0.10
+least_circle_ratio: 0.6
+
+#for detecting circle
+min_contours_area: 2000.0
+min_points_in_camera: 100 #if point num < 100 , then consider this points is not enough to fit circle
+
+pixel_move: 8   #choose the points in the circle , not in the circle's edge
+pixel_move_max: 20
