@@ -73,8 +73,8 @@ class OnlyDetector
     Eigen::Vector3d odom_p;
     Eigen::Matrix3d odom_R;    
 
-    std::queue<std::pair<double,Eigen::Vector3d>> odom_p_queue;
-    std::queue<std::pair<double,Eigen::Matrix3d>> odom_R_queue;
+    std::queue<std::pair<ros::Time,Eigen::Vector3d>> odom_p_queue;
+    std::queue<std::pair<ros::Time,Eigen::Matrix3d>> odom_R_queue;
 };
 
 
@@ -188,14 +188,21 @@ void OnlyDetector::ColorDepthCallback(const sensor_msgs::Image::ConstPtr &color,
         //this must be changed
         Eigen::Vector3d point(-pose[1], pose[0], pose[2]);
 
-        double t_now = color->header.stamp.toSec();
+        ros::Time t_now=depth->header.stamp;
 
         while(1)
         {
-            if(abs(t_now-odom_R_queue.front().first)<0.01)
+            if(odom_R_queue.empty())
+            {
+                ROS_WARN("no Odometry!!! Please check!!");
+                return;
+            }
+            if(abs((t_now-odom_R_queue.front().first).toSec())<0.1)
             {
                 odom_R=odom_R_queue.front().second;
                 odom_p=odom_p_queue.front().second;
+                odom_R_queue.pop();
+                odom_p_queue.pop();
                 break;
             }
             odom_R_queue.pop();
@@ -204,7 +211,7 @@ void OnlyDetector::ColorDepthCallback(const sensor_msgs::Image::ConstPtr &color,
 
         if(odom_R.isZero())
         {
-            ROS_WARN("no Odometry!!! Please check!!");
+            ROS_WARN("odom_R is zero !!!!!!");
             return;
         }
 
@@ -224,7 +231,6 @@ void OnlyDetector::ColorDepthCallback(const sensor_msgs::Image::ConstPtr &color,
 
 void OnlyDetector::OdomCallback(const nav_msgs::Odometry::ConstPtr &odom)
 {
-    double t = odom->header.stamp.toSec();
     double odom_p_x=odom->pose.pose.position.x;
     double odom_p_y=odom->pose.pose.position.y;
     double odom_p_z=odom->pose.pose.position.z;
@@ -235,8 +241,8 @@ void OnlyDetector::OdomCallback(const nav_msgs::Odometry::ConstPtr &odom)
                                                     odom->pose.pose.orientation.y, odom->pose.pose.orientation.z);
     
     Eigen::Matrix3d odom_R_temp=odom_q.toRotationMatrix();
-    odom_p_queue.push(std::make_pair(t,odom_p_temp));
-    odom_R_queue.push(std::make_pair(t,odom_R_temp));
+    odom_p_queue.push(std::make_pair(odom->header.stamp,odom_p_temp));
+    odom_R_queue.push(std::make_pair(odom->header.stamp,odom_R_temp));
 
     // odom_q.w=odom->pose.pose.orientation.w;
     // odom_q(1)=odom->pose.pose.orientation.w;

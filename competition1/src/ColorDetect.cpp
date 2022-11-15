@@ -116,15 +116,15 @@ bool ColorDetector::Detect(cv::Mat inputImg , int colortype , cv::Mat &outputImg
         //std::cout<<colortype<<std::endl;
         // cv::inRange(HSVimg, cv::Scalar(COLOR[colortype][0], COLOR[colortype][2], COLOR[colortype][4]), 
         //                                             cv::Scalar(COLOR[colortype][1], COLOR[colortype][3], COLOR[colortype][5]),temp); //Threshold the image
-        // cv::inRange(HSVimg, cv::Scalar(99,116,137), 
-        //                                     cv::Scalar(112,255,255),temp); //Threshold the image
+        cv::inRange(HSVimg, cv::Scalar(99,116,137), 
+                                            cv::Scalar(112,255,255),temp); //Threshold the image
         // cv::inRange(HSVimg, cv::Scalar(0,43,46), 
         //                                     cv::Scalar(10,255,255),temp); //Threshold the image
         // cv::inRange(HSVimg, cv::Scalar(156,43,46), 
         //                                     cv::Scalar(180,255,255),temp2); //Threshold the image
        // temp = temp+temp2;
-        cv::inRange(HSVimg, cv::Scalar(172,145,139), 
-                                            cv::Scalar(179,255,255),temp); //Threshold the image
+        // cv::inRange(HSVimg, cv::Scalar(172,145,139), 
+        //                                     cv::Scalar(179,255,255),temp); //Threshold the image
         cv::Mat output;
         cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(1,1));
         cv::morphologyEx(temp,output,cv::MORPH_OPEN,kernel);
