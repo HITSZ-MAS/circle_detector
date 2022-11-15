@@ -1,7 +1,7 @@
 #these params havent used now!!
 color_image_topic: "/camera/rgb/image_raw"
 depth_image_topic: "/camera/aligned_depth_to_color/image_raw"
-odom_topic: ""
+odom_topic: "/airsim_node/drone_1/odom_local_enu"
 circle_pose_topic: "/mas/drone_1/circle_pose"
 
 camera_type: 'RGBD'   #MONO , STEREO , RGBD

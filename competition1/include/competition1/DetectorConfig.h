@@ -61,6 +61,7 @@ public:
         nh.getParam(node_name_+"/color_image_topic",color_image_topic_);
         nh.getParam(node_name_+"/depth_image_topic",depth_image_topic_);
         nh.getParam(node_name_+"/circle_pose_topic",circle_pose_topic_);
+        nh.getParam(node_name_+"/odom_topic",odom_topic_);
         
 
         ROS_INFO("config loaded !!!!!!!!!!!!!!");
@@ -136,6 +137,7 @@ public:
     std::string color_image_topic_;
     std::string depth_image_topic_;
     std::string circle_pose_topic_;
+    std::string odom_topic_;
 
 };
 
