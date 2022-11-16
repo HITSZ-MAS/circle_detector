@@ -62,6 +62,7 @@ public:
         nh.getParam(node_name_+"/depth_image_topic",depth_image_topic_);
         nh.getParam(node_name_+"/circle_pose_topic",circle_pose_topic_);
         nh.getParam(node_name_+"/odom_topic",odom_topic_);
+        nh.getParam(node_name_+"/use_odom",use_odom_);
         
 
         ROS_INFO("config loaded !!!!!!!!!!!!!!");
@@ -118,6 +119,7 @@ public:
     
     bool resize_depth_;  //default enlarge 2 times
     bool show_image_;
+    bool use_odom_;
 
 
     //RANSAC

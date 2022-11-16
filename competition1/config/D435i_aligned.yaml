@@ -44,3 +44,6 @@ min_points_in_camera: 200 #if point num < 100 , then consider this points is not
 
 pixel_move: 6   #choose the points in the circle , not in the circle's edge
 pixel_move_max: 20
+
+#odom
+use_odom: false

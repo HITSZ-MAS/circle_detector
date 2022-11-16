@@ -189,41 +189,51 @@ void OnlyDetector::ColorDepthCallback(const sensor_msgs::Image::ConstPtr &color,
             return;
         }
 
-        Eigen::Vector3d point(pose[0], pose[1], pose[2]);
-
-        ros::Time t_now=depth->header.stamp;
-
-        while(1)
+        if(pconfig_->use_odom_)
         {
-            if(odom_R_queue.empty())
+            Eigen::Vector3d point(pose[0], pose[1], pose[2]);
+            ros::Time t_now=depth->header.stamp;
+            while(1)
             {
-                ROS_WARN("no Odometry!!! Please check!!");
-                return;
-            }
-            if(abs((t_now-odom_R_queue.front().first).toSec())<0.1)
-            {
-                odom_R=odom_R_queue.front().second;
-                odom_p=odom_p_queue.front().second;
+                if(odom_R_queue.empty())
+                {
+                    ROS_WARN("no Odometry!!! Please check!!");
+                    return;
+                }
+                if(abs((t_now-odom_R_queue.front().first).toSec())<0.1)
+                {
+                    odom_R=odom_R_queue.front().second;
+                    odom_p=odom_p_queue.front().second;
+                    odom_R_queue.pop();
+                    odom_p_queue.pop();
+                    break;
+                }
                 odom_R_queue.pop();
                 odom_p_queue.pop();
-                break;
             }
-            odom_R_queue.pop();
-            odom_p_queue.pop();
+
+            // Eigen::Vector3d point(-pose[1], pose[0], pose[2]);
+            // Eigen::Vector3d odom_p(odom->pose.pose.position.x, odom->pose.pose.position.y, odom->pose.pose.position.z);
+            // Eigen::Quaterniond odom_q(odom->pose.pose.orientation.w, odom->pose.pose.orientation.x, odom->pose.pose.orientation.y, odom->pose.pose.orientation.z);
+            // point = odom_q.toRotationMatrix() * point + odom_p;
+
+            if(odom_R.isZero())
+            {
+                cv::waitKey(10);
+                return;
+            }
+
+            point  = odom_R*point+odom_p;
+
+            msg.data.push_back(pose[0]);
+            msg.data.push_back(pose[1]);
+            msg.data.push_back(pose[2]);
+            msg.data.push_back(pose[3]);
+            pose_pub.publish(msg);
+
         }
 
-        // Eigen::Vector3d point(-pose[1], pose[0], pose[2]);
-        // Eigen::Vector3d odom_p(odom->pose.pose.position.x, odom->pose.pose.position.y, odom->pose.pose.position.z);
-        // Eigen::Quaterniond odom_q(odom->pose.pose.orientation.w, odom->pose.pose.orientation.x, odom->pose.pose.orientation.y, odom->pose.pose.orientation.z);
-        // point = odom_q.toRotationMatrix() * point + odom_p;
-
-        msg.data.push_back(pose[0]);
-        msg.data.push_back(pose[1]);
-        msg.data.push_back(pose[2]);
-        msg.data.push_back(pose[3]);
-        pose_pub.publish(msg);
-        ROS_ERROR("pose:%f , %f , %f",pose[0],pose[1],pose[2]);
-
+ 
         //pub point cloud
         sensor_msgs::PointCloud margin_cloud;
         sensor_msgs::PointCloud center_point;
@@ -247,6 +257,7 @@ void OnlyDetector::ColorDepthCallback(const sensor_msgs::Image::ConstPtr &color,
         margin_cloud.points.push_back(p_center);
 
         point_cloud_pub.publish(margin_cloud);
+        ROS_ERROR("pose:%f , %f , %f",pose[0],pose[1],pose[2]);
 
 
     }
@@ -257,6 +268,10 @@ void OnlyDetector::ColorDepthCallback(const sensor_msgs::Image::ConstPtr &color,
 
 void OnlyDetector::OdomCallback(const nav_msgs::Odometry::ConstPtr &odom)
 {
+    if(!pconfig_->use_odom_)
+    {
+        return;
+    }
     double odom_p_x=odom->pose.pose.position.x;
     double odom_p_y=odom->pose.pose.position.y;
     double odom_p_z=odom->pose.pose.position.z;

@@ -662,7 +662,7 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
             cv::Point p = contours[i][j];
 
             int pixel_move_temp;
-            if(area>150000)
+            if(area>100000)
             {
                 pixel_move_temp = pixel_move_ *2;
             }
