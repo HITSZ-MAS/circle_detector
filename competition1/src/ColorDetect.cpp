@@ -661,23 +661,33 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
             
             cv::Point p = contours[i][j];
 
-            if(p.x-center_x_2D>20)
+            int pixel_move_temp;
+            if(area>150000)
             {
-                p.x=p.x-8;
+                pixel_move_temp = pixel_move_ *2;
+            }
+            else
+            {
+                pixel_move_temp = pixel_move_;
+            }
+            
+            if(p.x-center_x_2D>pixel_move_max_)
+            {
+                p.x=p.x-pixel_move_temp;
             }
 
-            if(p.x-center_x_2D<-20)
+            if(p.x-center_x_2D<-pixel_move_max_)
             {
-                p.x=p.x+8;
+                p.x=p.x+pixel_move_temp;
             }
-            if(p.y-center_y_2D>20)
+            if(p.y-center_y_2D>pixel_move_max_)
             {
-                p.y=p.y-8;
+                p.y=p.y-pixel_move_temp;
             }
 
-            if(p.y-center_y_2D<-20)
+            if(p.y-center_y_2D<-pixel_move_max_)
             {
-                p.y=p.y+8;
+                p.y=p.y+pixel_move_temp;
             }
 
             cv::circle(m, p, 3, cv::Scalar(0, 255, 120), -1);//画点，其实就是实心圆
@@ -821,7 +831,7 @@ bool ColorDetector::FindContoursDepth(cv::Mat inputImg, std::vector<cv::Rect> &b
 
             ROS_INFO("fit circle successfully!!!!!");
 
-            if(/*circle[6]>0.9&&circle[6]<1.1*/1)
+            if(circle[6]>0.39&&circle[6]<58)
             {
                 std::cout<<"R="<<circle[6]<<std::endl;
                 std::vector<double> c(3);

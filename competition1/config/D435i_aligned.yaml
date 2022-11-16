@@ -1,7 +1,8 @@
 #these params havent used now!!
 color_image_topic: "/camera/rgb/image_raw"
+#depth_image_topic: "/camera/aligned_depth_to_color/image_raw"
 depth_image_topic: "/camera/aligned_depth_to_color/image_raw"
-odom_topic: "/airsim_node/drone_1/odom_local_enu"
+odom_topic: "/mavros/odometry/in"
 circle_pose_topic: "/mas/drone_1/circle_pose"
 
 camera_type: 'RGBD'   #MONO , STEREO , RGBD
@@ -33,13 +34,13 @@ show_image: true
 
 #RANSAC
 use_RANSAC: true
-iter_time: 350
-least_error: 0.10
-least_circle_ratio: 0.7
+iter_time: 400
+least_error: 0.05
+least_circle_ratio: 0.80
 
 #for detecting circle
-min_contours_area: 2000.0
-min_points_in_camera: 150 #if point num < 100 , then consider this points is not enough to fit circle
+min_contours_area: 5000.0
+min_points_in_camera: 200 #if point num < 100 , then consider this points is not enough to fit circle
 
-pixel_move: 8   #choose the points in the circle , not in the circle's edge
+pixel_move: 6   #choose the points in the circle , not in the circle's edge
 pixel_move_max: 20

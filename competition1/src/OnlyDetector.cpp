@@ -7,6 +7,8 @@
 #include <cv_bridge/cv_bridge.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <nav_msgs/Odometry.h>
+#include <sensor_msgs/PointCloud.h>
+#include <geometry_msgs/Point32.h>
 
 #include <Eigen/Dense>
 #include <message_filters/subscriber.h>
@@ -37,6 +39,9 @@ class OnlyDetector
         color_sub.subscribe(nh_,pconfig_->color_image_topic_,1);
         depth_sub.subscribe(nh_,pconfig_->depth_image_topic_,1);
         pose_pub  = nh_.advertise<std_msgs::Float64MultiArray>(pconfig_->circle_pose_topic_,1);
+        point_cloud_pub = nh_.advertise<sensor_msgs::PointCloud>("/drone_1/point_cloud",100);
+        center_pub = nh_.advertise<sensor_msgs::PointCloud>("/drone_1/circle_center",100);
+
         odom_sub=nh_.subscribe<nav_msgs::Odometry>(pconfig_->odom_topic_,1,&OnlyDetector::OdomCallback,this);
 
         sync_.reset(new Sync(syncpolicy(10), color_sub, depth_sub));
@@ -47,7 +52,8 @@ class OnlyDetector
   public:
     ros::NodeHandle nh_;
     ros::Publisher pose_pub; 
-
+    ros::Publisher point_cloud_pub;
+    ros::Publisher center_pub;
     ros::Subscriber odom_sub;
     //ros::Subscriber depth_sub = nh_.subscribe<sensor_msgs::Image>("/airsim_node/drone_1/front_center/DepthPlanar",1,&OnlyDetector::DepthCallback,this);
 
@@ -68,7 +74,7 @@ class OnlyDetector
 
     std::shared_ptr<ColorDetector> pCDetector;
 
-    //odom
+     //odom
     Eigen::Vector3d point;
     Eigen::Vector3d odom_p;
     Eigen::Matrix3d odom_R;    
@@ -179,14 +185,11 @@ void OnlyDetector::ColorDepthCallback(const sensor_msgs::Image::ConstPtr &color,
         
         if(RectExsit==false)
         {
-            ROS_ERROR("pose:%f , %f , %f",pose[0],pose[1],pose[2]);
             cv::waitKey(20);
             return;
         }
 
-
-        //this must be changed
-        Eigen::Vector3d point(-pose[1], pose[0], pose[2]);
+        Eigen::Vector3d point(pose[0], pose[1], pose[2]);
 
         ros::Time t_now=depth->header.stamp;
 
@@ -209,20 +212,43 @@ void OnlyDetector::ColorDepthCallback(const sensor_msgs::Image::ConstPtr &color,
             odom_p_queue.pop();
         }
 
-        if(odom_R.isZero())
-        {
-            ROS_WARN("odom_R is zero !!!!!!");
-            return;
-        }
+        // Eigen::Vector3d point(-pose[1], pose[0], pose[2]);
+        // Eigen::Vector3d odom_p(odom->pose.pose.position.x, odom->pose.pose.position.y, odom->pose.pose.position.z);
+        // Eigen::Quaterniond odom_q(odom->pose.pose.orientation.w, odom->pose.pose.orientation.x, odom->pose.pose.orientation.y, odom->pose.pose.orientation.z);
+        // point = odom_q.toRotationMatrix() * point + odom_p;
 
-        point = odom_R * point + odom_p;
-
-        msg.data.push_back(point[0]);
-        msg.data.push_back(point[1]);
-        msg.data.push_back(point[2]);
+        msg.data.push_back(pose[0]);
+        msg.data.push_back(pose[1]);
+        msg.data.push_back(pose[2]);
         msg.data.push_back(pose[3]);
         pose_pub.publish(msg);
-        ROS_ERROR("pose:%f , %f , %f",point[0],point[1],point[2]);
+        ROS_ERROR("pose:%f , %f , %f",pose[0],pose[1],pose[2]);
+
+        //pub point cloud
+        sensor_msgs::PointCloud margin_cloud;
+        sensor_msgs::PointCloud center_point;
+        margin_cloud.header = color->header;
+
+        int points_num=pCDetector->Circles_Points_Camera_.size();
+        std::vector<std::vector<double>> circle_points = pCDetector->Circles_Points_Camera_;
+        for(int j=0;j<points_num;++j)
+        {
+            geometry_msgs::Point32 p32;
+            p32.x=circle_points[j][0];
+            p32.y=circle_points[j][1];
+            p32.z=circle_points[j][2];
+            margin_cloud.points.push_back(p32);
+        }
+        geometry_msgs::Point32 p_center;
+        p_center.x=pose[0];
+        p_center.y=pose[1];
+        p_center.z=pose[2];
+
+        margin_cloud.points.push_back(p_center);
+
+        point_cloud_pub.publish(margin_cloud);
+
+
     }
 
 

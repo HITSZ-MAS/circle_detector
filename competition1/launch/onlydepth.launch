@@ -5,4 +5,8 @@
     <rosparam file="$(find competition1)/config/D435i_aligned.yaml" command="load" />
   </node>
 
+  <node name="rviz" pkg="rviz" type="rviz" output="screen"
+    args="-d $(find competition1)/rviz/visual.rviz"> 
+  </node>
+
 </launch>
